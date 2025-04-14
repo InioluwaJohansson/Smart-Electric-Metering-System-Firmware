@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../source/repos/Smart Metering System BackEnd"
+		},
+		{
+			"name": "SEMS Firmware",
+			"path": "."
+		}
+	],
+	"settings": {}
+}
