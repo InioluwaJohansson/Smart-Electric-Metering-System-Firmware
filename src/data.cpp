@@ -8,6 +8,7 @@
 #include <Adafruit_SSD1306.h>
 #include <PZEM004Tv30.h>
 #include <RTClib.h>
+#include "data.h"
 const char* MeterUnitsDataFromESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/MeterUnitsDataFromESP32";
 void sendDataToAPI(String meterId, String connectionAuth, double powerValue, double voltageValue, double currentValue, double powerFactorValue, String timeValue, bool status) {
   StaticJsonDocument<512> doc;
@@ -51,47 +52,42 @@ void sendDataToAPI(String meterId, String connectionAuth, double powerValue, dou
     }
     
   }
-StaticJsonDocument<256> fetchDataFromAPI(String meterId, String connectionAuth){
-  const String EstablishConnectionByESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/EstablishConnectionByESP32?MeterId=" + meterId + "&ConnectionAuth=" + connectionAuth;
+MeterData fetchDataFromAPI(String meterId, String connectionAuth){
+  const String EstablishConnectionByESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/EstablishConnectionByESP32?MeterId=" + meterId + "&auth=" + connectionAuth;
+  StaticJsonDocument<256> doc;
+  MeterData meterData;
   if (WiFi.status() == WL_CONNECTED && meterId.length() > 0 && connectionAuth.length() > 0) {
-    Serial.println("WiFi Connected");
     WiFiClientSecure client;
     client.setInsecure();
     HTTPClient http;
     http.setUserAgent("ESP32Client");
-    String fullUrl = EstablishConnectionByESP32;;
     http.begin(EstablishConnectionByESP32);
     int httpResponseCode = http.GET();
-    Serial.println("HTTP Response Code: " + String(httpResponseCode));
     if (httpResponseCode == 200) {
         String response = http.getString();
-        Serial.println(response);
-        StaticJsonDocument<256> doc;
         DeserializationError error = deserializeJson(doc, response);
         Serial.println(error.c_str());
-        if (!error) {
-          int totalUnits = doc["totalUnits"] | 0;
-          int consumedUnits = doc["consumedUnits"] | 0;
-          bool isActive = doc["isActive"];
-          bool activeLoad = doc["activeLoad"];
-          String message = doc["message"] | "No message";
-          bool status = doc["status"];
-          Serial.println(totalUnits);
-          Serial.println(consumedUnits);
-          Serial.println(isActive);
-          Serial.println(activeLoad);
-          Serial.println(message);
-          Serial.println(status);
-          return doc;
+        if (!error && doc != NULL) {
+          meterData.totalUnits = doc["totalUnits"];
+          meterData.consumedUnits = doc["consumedUnits"];
+          meterData.isActive = doc["isActive"];
+          meterData.activeLoad = doc["activeLoad"];
+          meterData.status = doc["status"];
+          return meterData;
         } else {
             Serial.println("JSON Parsing Error");
+            return fetchDataFromAPI(meterId, connectionAuth);
         }
 
     } else {
         Serial.println("GET Failed: " + String(httpResponseCode));
+        return fetchDataFromAPI(meterId, connectionAuth);
     }
   http.end();
   } else {
       Serial.println("WiFi not connected for GET request");
+      WiFi.reconnect();
+      delay(2000);
+      return fetchDataFromAPI(meterId, connectionAuth);
   }
 }

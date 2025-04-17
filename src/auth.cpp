@@ -1,7 +1,7 @@
-#include <ArduinoJson.h>
 #include <Preferences.h>
+#include "auth.h"
 Preferences preferences;
-
+  
 void saveMeterCredentials(String meterId, String connectionAuth) {
   preferences.begin("meter", false);
   preferences.putString("id", meterId);
@@ -9,11 +9,12 @@ void saveMeterCredentials(String meterId, String connectionAuth) {
   preferences.end();
 }
 
-StaticJsonDocument<256> loadMeterData() {
-    StaticJsonDocument<256> doc;
+MeterConfig loadMeterData() {
+    Serial.begin(9600);
+    MeterConfig doc;
     preferences.begin("meter", true);
-    doc["meterId"] = preferences.getString("id");
-    doc["connectionAuth"] = preferences.getString("auth");
+    doc.meterId = preferences.getString("id");
+    doc.connectionAuth = preferences.getString("auth");
     preferences.end();
     return doc;
 }
@@ -26,7 +27,7 @@ void EnterCredentials(){
     String meterIdSerial = "";
     String connectionAuthSerial = "";
     while (Serial.available() == 0) {
-        delay(100);
+        delay(1000);
     }
     meterIdSerial = Serial.readStringUntil('\n');
     meterIdSerial.trim();
@@ -34,7 +35,7 @@ void EnterCredentials(){
 
     Serial.print("Enter Connection Auth:");
     while (Serial.available() == 0) {
-        delay(100);
+        delay(1000);
     }
     connectionAuthSerial = Serial.readStringUntil('\n');
     connectionAuthSerial.trim();

@@ -1,12 +1,13 @@
 #ifndef SAVEDATA_H
 #define SAVEDATA_H
-
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <Preferences.h>
-
+struct MeterConfig {
+  String meterId;
+  String connectionAuth;
+};
 void saveMeterCredentials(String meterId, String connectionAuth);
-StaticJsonDocument<256> loadMeterData();
+MeterConfig loadMeterData();
 void EnterCredentials();
 void ClearCredentials();
 
