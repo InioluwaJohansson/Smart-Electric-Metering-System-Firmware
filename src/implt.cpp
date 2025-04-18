@@ -28,6 +28,7 @@ void MeterInfoSetup(){
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(ERROR_PIN, OUTPUT);
     pinMode(BUTTON_PIN, INPUT); 
+    digitalWrite(RELAY_PIN, LOW);
     digitalWrite(ACTIVE_PIN, HIGH);
     digitalWrite(BUZZER_PIN, HIGH);
     digitalWrite(ERROR_PIN, HIGH);
@@ -44,6 +45,7 @@ void ResetButton(){
     }
     if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
         if (reading == HIGH) {
+            digitalWrite(ERROR_PIN, HIGH);
             if (!buttonPressed) {
                 buttonPressed = true;
                 buttonHoldStart = millis();
@@ -57,6 +59,7 @@ void ResetButton(){
             }
         } else {
         if (buttonPressed && !clearingTriggered) {
+            digitalWrite(ERROR_PIN, LOW);
             Serial.println("Button released before 10 seconds. Aborting clear.");
         }
         buttonPressed = false;

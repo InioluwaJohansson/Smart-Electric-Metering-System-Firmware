@@ -34,7 +34,7 @@ void recordPower();
 float sumVoltage = 0.0, sumCurrent = 0.0, sumPower = 0.0, sumEnergy = 0.0, sumLoad = 0.0;
 double powerValue = 0.0, voltageValue = 0.0, currentValue = 0.0, powerFactorValue = 0.0, totalUnits = 0.0, consumedUnits = 0.0;
 String timeValue = "2023-10-01T12:00:00Z";
-bool status = true, activeLoad = false;
+bool status = true, activeLoad = false, bootModeStatus = false;
 MeterData dataFromServer;
 void sendDataTask(void* parameter) {
     if (meterId.length() > 0 && connectionAuth.length() > 0 && WiFi.status() == WL_CONNECTED && timeValue != NULL) {
@@ -102,25 +102,33 @@ void setup() {
         xTaskCreatePinnedToCore(fetchDataTask, "fetchDataFromAPI", 5096, NULL, 1, &Task1, 1);
         delay(2000);
     } else {
+        bootModeStatus = true;
         Serial.println("Setup Meter for the first time");
         // EnterCredentials();
         bootMode();
-        
+        EnterCredentials();
     }
 }
 void loop() {
-    ResetButton();
-    if(WiFi.status() == WL_CONNECTED) {
-        digitalWrite(ACTIVE_PIN, 1);
+    if (bootModeStatus == false){
+        ResetButton();
+        if(WiFi.status() == WL_CONNECTED) {
+            digitalWrite(ACTIVE_PIN, 1);
+            digitalWrite(ERROR_PIN, 0);
+        } else digitalWrite(ERROR_PIN, 1);
+        if(totalUnits > consumedUnits){
+            if(activeLoad) digitalWrite(RELAY_PIN, HIGH);
+            else digitalWrite(RELAY_PIN, LOW);
+            if(totalUnits - consumedUnits < 10.00) {
+                triggerBuzzer(false, true);
+                digitalWrite(ERROR_PIN, HIGH);
+            } else triggerBuzzer(false, false);
+            //recordPower();
+        }else digitalWrite(ERROR_PIN, HIGH);
+    }else{
+        digitalWrite(ERROR_PIN, 1);
+        delay(1000);
         digitalWrite(ERROR_PIN, 0);
-    } else digitalWrite(ERROR_PIN, 1);
-    if(totalUnits > consumedUnits){
-        if(activeLoad) digitalWrite(RELAY_PIN, HIGH);
-        else digitalWrite(RELAY_PIN, LOW);
-        if(totalUnits - consumedUnits < 10.00) {
-            triggerBuzzer(false, true);
-            digitalWrite(ERROR_PIN, HIGH);
-        } else triggerBuzzer(false, false);
-        //recordPower();
-    }else digitalWrite(ERROR_PIN, HIGH);
+        delay(1000);
+    }
 }

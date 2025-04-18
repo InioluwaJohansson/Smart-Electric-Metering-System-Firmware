@@ -30,7 +30,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       justify-content: center;
       color: #ffffff;
     }
-
     .login-container {
       background-color: #111827;
       padding: 2rem;
@@ -39,51 +38,42 @@ const char index_html[] PROGMEM = R"rawliteral(
       max-width: 400px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     }
-
     .header {
       display: flex;
       justify-content: center;
       align-items: center;
       margin-bottom: 1.1rem;
     }
-
     .logo {
       display: flex;
       align-items: center;
       gap: 0.2rem;
     }
-
     svg.logo-icon  {
       fill: #3b82f6;
     }
-
     .title {
       font-size: 1.7em;
       font-weight: bold;
     }
-
     h2 {
       font-size: 1.5rem;
       font-weight: bold;
     }
-
     p.subtext {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #9ca3af;
       margin-bottom: .5rem;
     }
-
     form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
-
     label {
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       margin-bottom: 0.25rem;
     }
-
     input[type="text"] {
       width: 100%;
       padding: 0.6rem 0.75rem;
@@ -91,7 +81,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       border: 1px solid #374151;
       border-radius: 0.375rem;
       color: #ffffff;
-      font-size: 0.9rem;
+      font-size: 1.2rem;
       outline:none;
     }
     input:focus{
@@ -104,7 +94,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       display: flex;
       flex-direction: column;
     }
-
     .btn {
       display: flex;
       align-items: center;
@@ -113,7 +102,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       background-color: #3b82f6;
       color: white;
       padding: 0.6rem;
-      font-size: 1rem;
+      font-size: 1.2rem;
       border: none;
       border-radius: 0.375rem;
       cursor: pointer;
@@ -144,7 +133,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="title">SEMS</div>
       </div>
     </div>
-    <h4>Setup meter for the first time!</h4>
+    <h3>Setup meter for the first time!</h3>
     <p class="subtext">Enter your meter credentials to setup your account</p>
     <form>
       <div class="input-wrapper">
@@ -174,9 +163,9 @@ const char index_html[] PROGMEM = R"rawliteral(
             <div class="title">SEMS</div>
           </div>
         </div>
-        <h4>Credentials Saved!</h4>
+        <h3>Credentials Saved!</h3>
         <p class="subtext">This window will close in.</p>
-        <h3 class="countdown">5</h3>
+        <h2 class="countdown">5</h2>
       </div>
       `;
       var connection;
@@ -194,8 +183,8 @@ const char index_html[] PROGMEM = R"rawliteral(
         section.innerHTML = content;
         startCountdown();
       }
-      //setTimeout(resetButton, 4000);
     }
+    Connect();
     SendCredentials = () => {
       var meterId = document.querySelector('#meterId');
       var connectionAuth = document.querySelector('#connectionAuth');
@@ -224,7 +213,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
     checkConnectionInput = () => {
       var input = document.querySelector('#connectionAuth');
-      if (input.value.length < 18) {
+      if (input.value.length < 10) {
         input.style = 'outline: 2px solid #dc3545; transition: 2s';
         return false;
       } else {
@@ -236,19 +225,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       e_msg = e_msg || window.event;
       console.log(e_msg.data);
     }
-    // countdown = id => {
-    //   var countDown = document.querySelector('.count-down');
-    //   countDown.innerHTML = id;
-    //   setTimeout(() => {
-    //   //   if (id <= 0) {
-    //   //     clearInterval(interval);
-    //   //     window.close();
-    //   //   }
-    //   //   id--;
-    //   //   //countdown(id);
-    //    }, 1000);
-    //   countdown(id);
-    // }
     function startCountdown(start = 5) {
       let time = start;
       const display = document.querySelector('.countdown');
@@ -264,8 +240,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
       }, 1000);
     }
-    
-    
     displayLoading = () => {
       section.style = "display: flex; justify-content:center; align-content: center;";
       setTimeout(displaySection, 3000);
@@ -280,8 +254,6 @@ const char index_html[] PROGMEM = R"rawliteral(
   </script>
 </body>
 </html>
-
-
     )rawliteral";
 void notify_to_Clients() {
     ws.textAll(String(socket_data));
