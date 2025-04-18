@@ -53,7 +53,7 @@ void sendDataToAPI(String meterId, String connectionAuth, double powerValue, dou
     
   }
 MeterData fetchDataFromAPI(String meterId, String connectionAuth){
-  const String EstablishConnectionByESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/EstablishConnectionByESP32?MeterId=" + meterId + "&auth=" + connectionAuth;
+  String EstablishConnectionByESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/EstablishConnectionByESP32?MeterId=" + meterId + "&auth=" + connectionAuth;
   StaticJsonDocument<256> doc;
   MeterData meterData;
   if (WiFi.status() == WL_CONNECTED && meterId.length() > 0 && connectionAuth.length() > 0) {
@@ -81,7 +81,12 @@ MeterData fetchDataFromAPI(String meterId, String connectionAuth){
 
     } else {
         Serial.println("GET Failed: " + String(httpResponseCode));
-        return fetchDataFromAPI(meterId, connectionAuth);
+        meterData.totalUnits = 0.00;
+        meterData.consumedUnits = 0.00;
+        meterData.isActive = false;
+        meterData.activeLoad = false;
+        meterData.status = false;
+        return meterData;
     }
   http.end();
   } else {

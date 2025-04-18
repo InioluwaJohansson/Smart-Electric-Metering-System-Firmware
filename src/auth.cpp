@@ -1,12 +1,17 @@
 #include <Preferences.h>
 #include "auth.h"
 Preferences preferences;
-  
+#define ACTIVE_PIN 21
 void saveMeterCredentials(String meterId, String connectionAuth) {
   preferences.begin("meter", false);
   preferences.putString("id", meterId);
   preferences.putString("auth", connectionAuth);
   preferences.end();
+  Serial.println("✅ Setup complete. Rebooting...");
+    digitalWrite(ACTIVE_PIN, HIGH);
+    delay(1000);
+    digitalWrite(ACTIVE_PIN, LOW);
+  ESP.restart();
 }
 
 MeterConfig loadMeterData() {

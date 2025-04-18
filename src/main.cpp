@@ -11,6 +11,7 @@
 #include "data.h"
 #include "auth.h"
 #include "implt.h"
+#include "setupmode.h"
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
 #define BUZZER_PIN 2
@@ -20,8 +21,6 @@
 #define BUTTON_PIN 36
 #define DEBOUNCE_DELAY 50
 #define HOLD_DURATION 10000
-
-
 PZEM004Tv30 pzem(Serial2, 17, 16);
 RTC_DS3231 rtc;
 const char* ssid = "TECNO CAMON";
@@ -86,30 +85,14 @@ void recordPower() {
     timeValue = "";
     // xTaskCreatePinnedToCore(sendDataTask, "SendDataTask", 8192, NULL, 1, NULL, 0);e
 }
-void MeterInfoSetup(){
-    pinMode(RELAY_PIN, OUTPUT);
-    pinMode(ACTIVE_PIN, OUTPUT);
-    pinMode(BUZZER_PIN, OUTPUT);
-    pinMode(ERROR_PIN, OUTPUT);
-    pinMode(BUTTON_PIN, INPUT); 
-    digitalWrite(ACTIVE_PIN, HIGH);
-    digitalWrite(BUZZER_PIN, HIGH);
-    digitalWrite(ERROR_PIN, HIGH);
-    delay(3000);
-    digitalWrite(BUZZER_PIN, LOW);
-    digitalWrite(ERROR_PIN, LOW);
-    digitalWrite(ACTIVE_PIN, LOW);
-    Serial.begin(9600);
-}
 void setup() {
     MeterConfig savedUserData;
     savedUserData = loadMeterData();
     meterId = savedUserData.meterId;
     connectionAuth = savedUserData.connectionAuth;
-    
+    MeterInfoSetup();
     if(meterId.length() > 0 && connectionAuth.length() > 0) {
-        // Serial.println(String(meterId));
-        // Serial.println(String(connectionAuth) || "Empty Connection Auth");
+
         // display.clearDisplay();
         // display.setCursor(0, 0);
         // //display.printf(String(meterId) + " is attempting to connect to SEMS");
@@ -120,15 +103,11 @@ void setup() {
         delay(2000);
     } else {
         Serial.println("Setup Meter for the first time");
-        EnterCredentials();
-        Serial.println("✅ Setup complete. Rebooting...");
-        digitalWrite(ACTIVE_PIN, HIGH);
-        delay(1000);
-        digitalWrite(ACTIVE_PIN, LOW);
-        ESP.restart();
+        // EnterCredentials();
+        bootMode();
+        
     }
 }
-
 void loop() {
     ResetButton();
     if(WiFi.status() == WL_CONNECTED) {

@@ -1,4 +1,3 @@
-#include <freertos/task.h>
 #include "auth.h"
 #include <Arduino.h>
 #include <WiFi.h>
