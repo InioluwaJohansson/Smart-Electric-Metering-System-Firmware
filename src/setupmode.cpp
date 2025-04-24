@@ -5,7 +5,7 @@
 #include <soc/rtc_wdt.h>
 #include "esp_task_wdt.h"
 #include "auth.h"
-const char* ssidBootMode = "SEMS Meter Setup!"; const char* passwordBootMode = "";
+const char* ssidBootMode = "SEMS Meter Setup!"; const char* passwordBootMode = "sems";
 IPAddress apIP(72, 72, 72, 72); AsyncWebServer server(80); AsyncWebSocket ws("/ws");
 int socket_data = 0;
 const char index_html[] PROGMEM = R"rawliteral(

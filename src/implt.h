@@ -4,6 +4,6 @@
 #include <Preferences.h>
 void MeterInfoSetup();
 void ResetButton();
-void displayData(String meterId, float voltage, float current, float power, float load, double units);
+void displayData(String meterId, float voltage, float current, float power, float load, double units, String operatingStatus, String messages);
 void triggerBuzzer(bool overload, bool lowUnits);
 #endif

@@ -3,7 +3,6 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <RTClib.h>
 struct MeterData{
     double totalUnits;
     double consumedUnits;
@@ -11,7 +10,7 @@ struct MeterData{
     bool activeLoad;
     bool status;
 };
-void sendDataToAPI(String meterId, String connectionAuth, double powerValue, double voltageValue, double currentValue, double powerFactorValue, String timeValue, bool status);
+void sendDataToAPI(String meterId, String connectionAuth, double powerValue, double voltageValue, double currentValue, bool status);
 MeterData fetchDataFromAPI(String meterId, String connectionAuth);
 
 #endif

@@ -3,22 +3,15 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <PZEM004Tv30.h>
-#include <RTClib.h>
 #include "data.h"
 const char* MeterUnitsDataFromESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/MeterUnitsDataFromESP32";
-void sendDataToAPI(String meterId, String connectionAuth, double powerValue, double voltageValue, double currentValue, double powerFactorValue, String timeValue, bool status) {
+void sendDataToAPI(String meterId, String connectionAuth, double powerValue, double voltageValue, double currentValue, bool status) {
   StaticJsonDocument<512> doc;
   doc["meterId"] = meterId;
   doc["connectionAuth"] = connectionAuth;
   doc["powerValue"] = double(powerValue);
   doc["voltageValue"] = double(voltageValue);
   doc["currentValue"] = double(currentValue);
-  doc["powerFactorValue"] = double(powerFactorValue);
-  doc["timeValue"] = timeValue;
   doc["status"] = status;
   String requestBody;
   serializeJson(doc, requestBody);
@@ -92,7 +85,7 @@ MeterData fetchDataFromAPI(String meterId, String connectionAuth){
   } else {
       Serial.println("WiFi not connected for GET request");
       WiFi.reconnect();
-      delay(2000);
+      delay(5000);
       return fetchDataFromAPI(meterId, connectionAuth);
   }
 }

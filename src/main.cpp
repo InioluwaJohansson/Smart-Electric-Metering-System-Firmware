@@ -5,15 +5,11 @@
 #include <ArduinoJson.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 #include <PZEM004Tv30.h>
-#include <RTClib.h>
 #include "data.h"
 #include "auth.h"
 #include "implt.h"
 #include "setupmode.h"
-#define OLED_WIDTH 128
-#define OLED_HEIGHT 64
 #define BUZZER_PIN 2
 #define RELAY_PIN 23
 #define ACTIVE_PIN 21
@@ -22,44 +18,64 @@
 #define DEBOUNCE_DELAY 50
 #define HOLD_DURATION 10000
 PZEM004Tv30 pzem(Serial2, 17, 16);
-RTC_DS3231 rtc;
 const char* ssid = "TECNO CAMON";
 const char* password = "Johansson001%";
 String meterId;
 String connectionAuth;
 TaskHandle_t Task1, Task2;
+TaskHandle_t fetchDataHandle = nullptr;
+
 void recordPower();
-//void displayData(float voltage, float current, float power, float load);
-//void triggerBuzzer(bool overload, bool lowUnits);
+
 float sumVoltage = 0.0, sumCurrent = 0.0, sumPower = 0.0, sumEnergy = 0.0, sumLoad = 0.0;
 double powerValue = 0.0, voltageValue = 0.0, currentValue = 0.0, powerFactorValue = 0.0, totalUnits = 0.0, consumedUnits = 0.0;
-String timeValue = "2023-10-01T12:00:00Z";
 bool status = true, activeLoad = false, bootModeStatus = false;
 MeterData dataFromServer;
 void sendDataTask(void* parameter) {
-    if (meterId.length() > 0 && connectionAuth.length() > 0 && WiFi.status() == WL_CONNECTED && timeValue != NULL) {
-      sendDataToAPI(meterId, connectionAuth, powerValue, voltageValue, currentValue, powerFactorValue, timeValue, status);
+    if (meterId.length() > 0 && connectionAuth.length() > 0 && WiFi.status() == WL_CONNECTED) {
+      sendDataToAPI(meterId, connectionAuth, powerValue, voltageValue, currentValue, status);
       //vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
-void fetchDataTask(void *parameter) {
-    while(true){
-        if (meterId.length() == 0) {
-            Serial.println("Empty Meter ID");
-        }
-        if (connectionAuth.length() == 0) {
-            Serial.println("Empty Connection Auth");
-        }
-        dataFromServer = fetchDataFromAPI(meterId, connectionAuth);
-        if(dataFromServer.totalUnits != 0.00){
-            bool dataStatus = dataFromServer.status;
-            totalUnits = dataFromServer.totalUnits;
-            consumedUnits = dataFromServer.consumedUnits;
-            activeLoad = dataFromServer.activeLoad;
-        }
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
+// void fetchDataTask(void *parameter) {
+//     while(true){
+//         if (meterId.length() == 0) {
+//             Serial.println("Empty Meter ID");
+//         }
+//         if (connectionAuth.length() == 0) {
+//             Serial.println("Empty Connection Auth");
+//         }
+//         dataFromServer = fetchDataFromAPI(meterId, connectionAuth);
+//         if(dataFromServer.totalUnits != 0.00){
+//             bool dataStatus = dataFromServer.status;
+//             totalUnits = dataFromServer.totalUnits;
+//             consumedUnits = dataFromServer.consumedUnits;
+//             activeLoad = dataFromServer.activeLoad;
+//         }
+//         vTaskDelay(30000 / portTICK_PERIOD_MS);
+//   }
+// }
+void fetchDataTask(void* param) {
+    for (;;) {
+      if (meterId.isEmpty())    Serial.println("Empty Meter ID");
+      if (connectionAuth.isEmpty()) Serial.println("Empty Connection Auth");
+  
+      auto data = fetchDataFromAPI(meterId, connectionAuth);
+      if (data.totalUnits != 0.0) {
+        bool dataStatus = dataFromServer.status;
+        Serial.println("Data Status: " + String(dataStatus));
+        totalUnits = data.totalUnits;
+        consumedUnits = data.consumedUnits;
+        activeLoad = data.activeLoad;
+      }else {
+        totalUnits = 0.00;
+        consumedUnits = 0.00;
+        activeLoad = false;
+      }
+      
+      vTaskDelay(pdMS_TO_TICKS(30000));
+    }
   }
-}
 void recordPower() {
     sumVoltage = sumCurrent = sumPower = sumLoad = 0.0;
     for (int i = 1; i <= 10; i++) {
@@ -73,7 +89,7 @@ void recordPower() {
         sumPower += power;
         sumEnergy += energy;
         sumLoad += load;
-        displayData(meterId, voltage, current, power, load, totalUnits - consumedUnits);
+        displayData(meterId, voltage, current, power, load, totalUnits - consumedUnits, "Active", "No Messages");
         if (voltage >= 240.0) {
             digitalWrite(RELAY_PIN, LOW);
             triggerBuzzer(true, false);
@@ -82,8 +98,7 @@ void recordPower() {
         }
         delay(1000);
     }
-    timeValue = "";
-    // xTaskCreatePinnedToCore(sendDataTask, "SendDataTask", 8192, NULL, 1, NULL, 0);e
+    // xTaskCreatePinnedToCore(sendDataTask, "SendDataTask", 8192, NULL, 1, NULL, 0);
 }
 void setup() {
     MeterConfig savedUserData;
@@ -92,14 +107,10 @@ void setup() {
     connectionAuth = savedUserData.connectionAuth;
     MeterInfoSetup();
     if(meterId.length() > 0 && connectionAuth.length() > 0) {
-
-        // display.clearDisplay();
-        // display.setCursor(0, 0);
-        // //display.printf(String(meterId) + " is attempting to connect to SEMS");
-        // display.display();
         WiFi.begin(ssid, password);
         delay(7000);
-        xTaskCreatePinnedToCore(fetchDataTask, "fetchDataFromAPI", 5096, NULL, 1, &Task1, 1);
+        xTaskCreatePinnedToCore(fetchDataTask,"fetchDataFromAPI", 6144, NULL, 1, &fetchDataHandle, 1);
+        
         delay(2000);
     } else {
         bootModeStatus = true;
@@ -115,6 +126,7 @@ void loop() {
         if(WiFi.status() == WL_CONNECTED) {
             digitalWrite(ACTIVE_PIN, 1);
             digitalWrite(ERROR_PIN, 0);
+            displayData(meterId, 0.0, 0.0, 0.0, 0.0, totalUnits - consumedUnits, "Active", "No Messages");
         } else digitalWrite(ERROR_PIN, 1);
         if(totalUnits > consumedUnits){
             if(activeLoad) digitalWrite(RELAY_PIN, HIGH);
