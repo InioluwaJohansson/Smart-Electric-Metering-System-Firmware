@@ -5,7 +5,8 @@
 #include <soc/rtc_wdt.h>
 #include "esp_task_wdt.h"
 #include "auth.h"
-const char* ssidBootMode = "SEMS Meter Setup!"; const char* passwordBootMode = "sems";
+#include "implt.h"
+const char* ssidBootMode = "SEMS Meter Setup!"; const char* passwordBootMode = "SEMSMeter";
 IPAddress apIP(72, 72, 72, 72); AsyncWebServer server(80); AsyncWebSocket ws("/ws");
 int socket_data = 0;
 const char index_html[] PROGMEM = R"rawliteral(
@@ -308,6 +309,7 @@ void bootMode(){
   WiFi.mode(WIFI_AP_STA); WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(ssidBootMode, passwordBootMode); IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");  Serial.println(myIP);
+  displayWifiText(ssidBootMode, passwordBootMode, String("72.72.72.72"));
   initWebSocket();
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html);

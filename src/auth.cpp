@@ -1,5 +1,6 @@
 #include <Preferences.h>
 #include "auth.h"
+#include "implt.h"
 Preferences preferences;
 #define ACTIVE_PIN 21
 void saveMeterCredentials(String meterId, String connectionAuth) {
@@ -7,6 +8,13 @@ void saveMeterCredentials(String meterId, String connectionAuth) {
   preferences.putString("id", meterId);
   preferences.putString("auth", connectionAuth);
   preferences.end();
+  displayTextCenter("Meter Data Saved", "Successfully");
+  delay(1000);
+  for(int i = 5; i > 0; i--) {
+    displayTextCenter("Rebooting in " + String(i), "");
+    delay(1000);
+  }
+  displayClear();
   Serial.println("✅ Setup complete. Rebooting...");
     digitalWrite(ACTIVE_PIN, HIGH);
     delay(1000);
