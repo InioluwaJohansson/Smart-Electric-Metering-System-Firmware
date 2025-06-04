@@ -84,37 +84,31 @@ void recordPower() {
     Serial.println("Before Task");
     xTaskCreatePinnedToCore(sendDataTask, "SendDataTask", 5192, NULL, 1, &sendDataHandle, 1);
 }
-void RunMeter() {
-    if(WiFi.status() == WL_CONNECTED) {
-        digitalWrite(ERROR_PIN, 0);
-        ResetButton();
-        if(activeLoad) activeLoadStatus = "Active";
-        else activeLoadStatus = "InActive";
-        if(totalUnits == 0.0 ){
-            displayData(meterId, 0.0, 0.0, 0.0, 0.0, totalUnits - consumedUnits, activeLoadStatus, "UTCS");
-        }else{
-            displayData(meterId, 0.0, 0.0, 0.0, 0.0, totalUnits - consumedUnits, activeLoadStatus, "Nil");
-        }
-        if(totalUnits > consumedUnits){
-            if(activeLoad == true) {
-                digitalWrite(RELAY_PIN, HIGH);
-                digitalWrite(RELAY_LED, HIGH);
-                recordPower();
-            }
-            else{
-                digitalWrite(RELAY_PIN, LOW);
-                digitalWrite(RELAY_LED, LOW);
-            }
-            if(totalUnits - consumedUnits < 10.00) {
-                triggerBuzzer(false, true);
-                digitalWrite(ERROR_PIN, HIGH);
-            } else triggerBuzzer(false, false);
-        }else digitalWrite(ERROR_PIN, HIGH);
-    } else{ digitalWrite(ERROR_PIN, 1);
-        WiFi.reconnect();
-        displayTextCenter("CONNECTING TO SEMS", "SERVER...");
-        delay(7000);
+void RunMeter() {    
+    digitalWrite(ERROR_PIN, 0);
+    ResetButton();
+    if(activeLoad) activeLoadStatus = "Active";
+    else activeLoadStatus = "InActive";
+    if(totalUnits == 0.0 ){
+        displayData(meterId, 0.0, 0.0, 0.0, 0.0, totalUnits - consumedUnits, activeLoadStatus, "UTCS");
+    }else{
+        displayData(meterId, 0.0, 0.0, 0.0, 0.0, totalUnits - consumedUnits, activeLoadStatus, "Nil");
     }
+    if(totalUnits > consumedUnits){
+        if(activeLoad == true) {
+            digitalWrite(RELAY_PIN, HIGH);
+            digitalWrite(RELAY_LED, HIGH);
+            recordPower();
+        }
+        else{
+            digitalWrite(RELAY_PIN, LOW);
+            digitalWrite(RELAY_LED, LOW);
+        }
+        if(totalUnits - consumedUnits < 10.00) {
+            triggerBuzzer(false, true);
+            digitalWrite(ERROR_PIN, HIGH);
+        } else triggerBuzzer(false, false);
+    }else digitalWrite(ERROR_PIN, HIGH);
 }
 void IRAM_ATTR onTamperInterrupt() {
   tamperDetected = (digitalRead(TAMPER_IN) == LOW); 
@@ -150,15 +144,22 @@ void setup() {
 }
 
 void loop() {
-    if (bootModeStatus == false && tamperDetected == false) {
-        RunMeter();
-    }else if(tamperDetected) {
-        displayTextCenter("Tamper Detected", "Cover Meter");
-        delay(2000); 
-    }else{
+    if(WiFi.status() == WL_CONNECTED) {
+        if (bootModeStatus == false && tamperDetected == false) {
+            RunMeter();
+        }else if(tamperDetected) {
+            displayTextCenter("Tamper Detected!", "Cover Meter");
+            delay(2000); 
+        }else{
+            digitalWrite(ERROR_PIN, 1);
+            delay(1000);
+            digitalWrite(ERROR_PIN, 0);
+            delay(1000);
+        }
+    }else{ 
         digitalWrite(ERROR_PIN, 1);
-        delay(1000);
-        digitalWrite(ERROR_PIN, 0);
-        delay(1000);
+        WiFi.reconnect();
+        displayTextCenter("Connecting To Sems", "Server...");
+        delay(5000);
     }
 }
