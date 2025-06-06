@@ -21,11 +21,11 @@
 #define HOLD_DURATION 10000
 PZEM004Tv30 pzem(Serial2, 17, 16);
 const char* ssid = "TECNO CAMON";
-const char* password = "Johansson001%";
+const char* password = "Johansson001%%";
 String meterId;
 String connectionAuth;
 TaskHandle_t fetchDataHandle = nullptr, sendDataHandle = nullptr;
-float sumVoltage = 0.0, sumCurrent = 0.0, sumPower = 0.0, sumEnergy = 0.0, sumLoad = 0.0;
+float sumVoltage = 0.0, sumCurrent = 0.0, sumPower = 0.0;
 double powerValue = 0.0, voltageValue = 0.0, currentValue = 0.0, powerFactorValue = 0.0, totalUnits = 0.0, consumedUnits = 0.0;
 bool status = true, activeLoad = false, bootModeStatus = false;
 volatile bool tamperDetected = false;
@@ -33,10 +33,9 @@ String activeLoadStatus = "InActive";
 MeterData dataFromServer;
 void sendDataTask(void* param) {
     if (meterId.length() > 0 && connectionAuth.length() > 0 && WiFi.status() == WL_CONNECTED) {
-        Serial.println("After Task");
-      //sendDataToAPI(meterId, connectionAuth, powerValue, voltageValue, currentValue, status);
+        sendDataToAPI(meterId, connectionAuth, powerValue, voltageValue, currentValue, status);
     }
-    vTaskDelete(NULL); 
+    vTaskDelete(NULL);
 }
 void fetchDataTask(void* param) {
     for (;;) {
@@ -58,20 +57,12 @@ void fetchDataTask(void* param) {
 }
 }
 void recordPower() {
-    sumVoltage = sumCurrent = sumPower = sumLoad = 0.0;
+    sumVoltage = sumCurrent = sumPower = 0.0;
     for (int i = 1; i <= 10; i++) {
-        float voltage = pzem.voltage();
-        float current = pzem.current();
-        float power = pzem.power();
-        float energy = pzem.energy();
-        float load = power / (voltage > 0 ? voltage : 1);
-        sumVoltage += voltage;
-        sumCurrent += current;
-        sumPower += power;
-        sumEnergy += energy;
-        sumLoad += load;
-        displayData(meterId, voltage, current, power, load, totalUnits - consumedUnits, "Active", "Nil");
-        if (voltage >= 240.0) {
+        sumVoltage += pzem.voltage();
+        sumCurrent += pzem.current();
+        sumPower += pzem.energy();
+        if (pzem.voltage() >= 240.0) {
             digitalWrite(RELAY_PIN, LOW);
             digitalWrite(RELAY_LED, LOW);
             triggerBuzzer(true, false);
@@ -81,7 +72,10 @@ void recordPower() {
         }
         delay(1000);
     }
-    Serial.println("Before Task");
+    sumVoltage /= 10;
+    sumCurrent /= 10;
+    sumPower /= 10;
+    displayData(meterId, (sumVoltage/10, 0), (sumCurrent/10, 2), (sumPower/10, 1), (pzem.power()/pzem.voltage(),1), (totalUnits - consumedUnits, 1), "Active", "Nil");
     xTaskCreatePinnedToCore(sendDataTask, "SendDataTask", 5192, NULL, 1, &sendDataHandle, 1);
 }
 void RunMeter() {    
