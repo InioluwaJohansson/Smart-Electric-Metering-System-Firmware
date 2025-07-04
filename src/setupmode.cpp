@@ -6,7 +6,7 @@
 #include "esp_task_wdt.h"
 #include "auth.h"
 #include "implt.h"
-const char* ssidBootMode = "SEMS Meter Setup!"; const char* passwordBootMode = "SEMSMeter";
+const char* ssidBootMode = "SEMS Meter Setup"; const char* passwordBootMode = "SEMSMeter";
 IPAddress apIP(72, 72, 72, 72); AsyncWebServer server(80); AsyncWebSocket ws("/ws");
 int socket_data = 0;
 const char index_html[] PROGMEM = R"rawliteral(
@@ -38,7 +38,6 @@ const char index_html[] PROGMEM = R"rawliteral(
       padding: 2rem;
       border-radius: 1rem;
       width: 100%;
-      max-width: 400px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     }
     .header {

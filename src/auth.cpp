@@ -7,8 +7,8 @@ void saveMeterCredentials(String meterId, String connectionAuth, String wifiName
   preferences.begin("meter", false);
   preferences.putString("id", meterId);
   preferences.putString("auth", connectionAuth);
-  preferences.putString("wifi_name", wifiName);
-  preferences.putString("wifi_password", wifiPassword);
+  preferences.putString("wifiName", wifiName);
+  preferences.putString("wifiPassword", wifiPassword);
   preferences.end();
   displayTextCenter("Meter Data Saved", "Successfully");
   delay(1000);
@@ -30,6 +30,8 @@ MeterConfig loadMeterData() {
     preferences.begin("meter", true);
     doc.meterId = preferences.getString("id");
     doc.connectionAuth = preferences.getString("auth");
+    doc.wifiName = preferences.getString("wifiName");
+    doc.wifiPassword = preferences.getString("wifiPassword");
     preferences.end();
     return doc;
 }
@@ -74,7 +76,7 @@ void EnterCredentials(){
     connectionAuthSerial = Serial.readStringUntil('\n');
     connectionAuthSerial.trim();
     Serial.println(connectionAuthSerial);
-    if(meterIdSerial == "" || connectionAuthSerial == "") {
+    if(meterIdSerial == "" || connectionAuthSerial == "" || wifiNameSerial == "" || wifiPasswordSerial == "") {
         Serial.println("Invalid input. Please try again.");
         EnterCredentials();
     }else{
@@ -87,5 +89,7 @@ void ClearCredentials(){
     preferences.begin("meter", false);
     preferences.remove("id");
     preferences.remove("auth");
+    preferences.remove("wifiName");
+    preferences.remove("wifiPassword");
     preferences.end(); 
 }
