@@ -120,7 +120,7 @@ void setup() {
     meterId = savedUserData.meterId;
     connectionAuth = savedUserData.connectionAuth;
     if(meterId.length() > 0 && connectionAuth.length() > 0) {
-        WiFi.begin(ssid, password);
+        WiFi.begin(savedUserData.wifiName, savedUserData.wifiPassword);
         xTaskCreatePinnedToCore(fetchDataTask,"fetchDataFromAPI", 6144, NULL, 1, &fetchDataHandle, 1);
         displayTextCenter("Connecting to SEMS", "Server...");
         delay(7000);

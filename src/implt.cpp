@@ -33,8 +33,9 @@ void MeterInfoSetup(){
     digitalWrite(BUZZER_PIN, LOW);
     digitalWrite(ERROR_PIN, LOW);
     digitalWrite(ACTIVE_PIN, HIGH);
+    delay(1000);
     Wire.begin(I2C_SDA, I2C_SCL);
-    lcd.begin(16, 4);
+    lcd.init();
     lcd.backlight();
     Serial.begin(9600);
 }

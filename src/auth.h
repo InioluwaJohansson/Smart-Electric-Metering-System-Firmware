@@ -5,8 +5,10 @@
 struct MeterConfig {
   String meterId;
   String connectionAuth;
+  String wifiName;
+  String wifiPassword;
 };
-void saveMeterCredentials(String meterId, String connectionAuth);
+void saveMeterCredentials(String meterId, String connectionAuth, String wifiName, String wifiPassword);
 MeterConfig loadMeterData();
 void EnterCredentials();
 void ClearCredentials();

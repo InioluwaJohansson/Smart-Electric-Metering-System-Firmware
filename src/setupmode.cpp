@@ -15,7 +15,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SEMS METER SETUP</title>
+  <title>Smart Electric Metering System Meter Setup</title>
   <style>
     * {
       margin: 0;
@@ -30,6 +30,8 @@ const char index_html[] PROGMEM = R"rawliteral(
       align-items: center;
       justify-content: center;
       color: #ffffff;
+      overflow: auto;
+      padding: 7rem;
     }
     .login-container {
       background-color: #111827;
@@ -49,6 +51,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       display: flex;
       align-items: center;
       gap: 0.2rem;
+
     }
     svg.logo-icon  {
       fill: #3b82f6;
@@ -60,6 +63,9 @@ const char index_html[] PROGMEM = R"rawliteral(
     h2 {
       font-size: 1.5rem;
       font-weight: bold;
+    }
+    label {
+      font-size: .8rem !important;
     }
     p.subtext {
       font-size: 1rem;
@@ -75,21 +81,22 @@ const char index_html[] PROGMEM = R"rawliteral(
       font-size: 1.2rem;
       margin-bottom: 0.25rem;
     }
-    input[type="text"] {
+    input[type="text"], input[type="password"] {
       width: 100%;
       padding: 0.6rem 0.75rem;
       background-color: #1f2937;
       border: 1px solid #374151;
       border-radius: 0.375rem;
       color: #ffffff;
-      font-size: 1.2rem;
-      outline:none;
+      font-size: .8rem;
+      outline:0px solid transparent !important;
     }
     input:focus{
       outline: 1px solid #9ca3af;
     }
     input::placeholder {
       color: #9ca3af;
+      font-size: .8rem;
     }
     .input-wrapper {
       display: flex;
@@ -103,7 +110,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       background-color: #3b82f6;
       color: white;
       padding: 0.6rem;
-      font-size: 1.2rem;
+      font-size: 1rem;
       border: none;
       border-radius: 0.375rem;
       cursor: pointer;
@@ -122,11 +129,14 @@ const char index_html[] PROGMEM = R"rawliteral(
       justify-content: center;
       gap: 0.5rem;
     }
+    
   </style>
 </head>
 <body>
   <div class="login-container">
-    <div class="header">
+  </div>
+  <script>
+    const main_content = `<div class="header">
       <div class="logo">
         <svg xmlns="http://www.w3.org/2000/svg" class="logo-icon" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
           <path d="M13 2L3 14h7v8l10-12h-7z"/>
@@ -134,9 +144,19 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="title">SEMS</div>
       </div>
     </div>
-    <h3>Setup meter for the first time!</h3>
-    <p class="subtext">Enter your meter credentials to setup your account</p>
+        <h3>Setup meter for the first time!</h3>
+    <p class="subtext">Enter the credentials below to setup your meter</p>
     <form>
+      <h3>Network Credentials</h3>
+      <div class="input-wrapper">
+        <label for="wifiName">Wi-Fi Name</label>
+        <input type="text" id="wifiName" placeholder="Wi-Fi Name" oninput="checkWifiNameInput()" minlength="1">
+      </div>
+      <div class="input-wrapper">
+        <label for="wifiPassword">Wi-Fi Password</label>
+        <input type="password" id="wifiPassword" placeholder="Wi-Fi Password" oninput="checkWifiPasswordInput()" minlength="1">
+      </div>
+      <h3>Meter Credentials</h3>
       <div class="input-wrapper">
         <label for="meterId">Meter ID</label>
         <input type="text" id="meterId" placeholder="METERAG67W35" oninput="checkMeterInput()" maxlength="13">
@@ -151,9 +171,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         </svg>
         Save Credentials
       </button>
-    </form>
-  </div>
-  <script>
+    </form>`;
     const content = `
       <div class="close-card">
         <div class="header">
@@ -171,27 +189,37 @@ const char index_html[] PROGMEM = R"rawliteral(
       `;
       var connection;
       
-      Connect = () => {
-        if (connection == null) {
-          connection = new WebSocket("ws://" + window.location.host + "/ws");
-          console.log(connection.message);
-        }
+    Connect = () => {
+      if (connection == null) {
+        connection = new WebSocket("ws://" + window.location.host + "/ws");
+        console.log(connection.message);
       }
-      Send = () => {
+    }
+    Send = () => {
       var section = document.querySelector('.login-container');
       var status = SendCredentials();
-      if(status){
-        section.innerHTML = content;
-        startCountdown();
+      if(status == true){
+        section.style = "display: flex; flex-direction: row"
+        createDotLoader();
+        setTimeout(() => {
+          displayCountdown();
+        }, 5000);
       }
+    }
+    displayCountdown = () => {
+      var section = document.querySelector('.login-container');
+      section.innerHTML = content;
+      startCountdown();
     }
     Connect();
     SendCredentials = () => {
       var meterId = document.querySelector('#meterId');
       var connectionAuth = document.querySelector('#connectionAuth');
-      if (checkMeterInput() && checkConnectionInput()) {
+      var wifiName = document.querySelector('#wifiName');
+      var wifiPassword = document.querySelector('#wifiPassword');
+      if (checkMeterInput() && checkConnectionInput() && checkWifiNameInput() && checkWifiPasswordInput()) {
         if (connection != null) {
-          connection.send(meterId.value+"/"+connectionAuth.value);
+          connection.send(meterId.value+"/"+connectionAuth.value+"/"+wifiName.value+"/"+wifiPassword.value);
           return true
         } else {
           Connect();
@@ -200,25 +228,47 @@ const char index_html[] PROGMEM = R"rawliteral(
       else{
         checkMeterInput();
         checkConnectionInput();
+        checkWifiNameInput();
+        checkWifiPasswordInput();
       }      
     }
     checkMeterInput = () => {
       var input = document.querySelector('#meterId');
       if (input.value.length < 13) {
-        input.style = 'outline: 2px solid #dc3545; transition: 2s';
+        input.style = 'border-bottom: 2px solid #dc3545; transition: 2s';
         return false;
       } else {
-        input.style = 'outline: 2px solid #198754; transition: 2s';
+        input.style = 'border-bottom: 2px solid #198754; transition: 2s';
         return true;
       }
     }
     checkConnectionInput = () => {
       var input = document.querySelector('#connectionAuth');
       if (input.value.length < 10) {
-        input.style = 'outline: 2px solid #dc3545; transition: 2s';
+        input.style = 'border-bottom: 2px solid #dc3545; transition: 2s';
         return false;
       } else {
-        input.style = 'outline: 2px solid #198754; transition: 2s';
+        input.style = 'border-bottom: 2px solid #198754; transition: 2s';
+        return true;
+      }
+    }
+    checkWifiNameInput = () => {
+      var input = document.querySelector('#wifiName');
+      if (input.value.length < 1) {
+        input.style = 'border-bottom: 2px solid #dc3545; transition: 2s';
+        return false;
+      } else {
+        input.style = 'border-bottom: 2px solid #198754; transition: 2s';
+        return true;
+      }
+    }
+    checkWifiPasswordInput = () => {
+      var input = document.querySelector('#wifiPassword');
+      if (input.value.length < 1) {
+        input.style = 'border-bottom: 2px solid #dc3545; transition: 2s';
+        return false;
+      } else {
+        input.style = 'border-bottom: 2px solid #198754; transition: 2s';
         return true;
       }
     }
@@ -230,26 +280,67 @@ const char index_html[] PROGMEM = R"rawliteral(
       let time = start;
       const display = document.querySelector('.countdown');
       display.innerHTML = time;
-
       const interval = setInterval(() => {
         time--;
         if (time >= 0) {
           display.innerHTML = time;
         } else {
           clearInterval(interval);
-          window.close();
+          setTimeout(() => {
+            window.close();
+          }, 1000);
         }
       }, 1000);
     }
     displayLoading = () => {
-      section.style = "display: flex; justify-content:center; align-content: center;";
-      setTimeout(displaySection, 3000);
+      createDotLoader();
       Connect();
+      setTimeout(() => {
+        displayContent();
+      }, 5000);
     }
-    displaySection = () => {
-      section.style = 'animation: fadeIn 2s; -webkit-animation: fadeIn 2s; -moz-animation: fadeIn 2s; -o-animation: fadeIn 2s;-ms-animation: fadeIn 2s;';
-      section.innerHTML = content;
-      Connect();
+    displayContent = () => {
+      var section = document.querySelector('.login-container');
+      section.style = "disply: flex; flex-direction: column;";
+      section.innerHTML = main_content;
+    }
+
+    function createDotLoader() {
+      const container = document.querySelector('.login-container');
+      if (!container) return;
+
+      container.innerHTML = "";
+      container.style.display = "flex";
+      container.style.gap = "8px";
+      container.style.alignItems = "center";
+      container.style.justifyContent = "center";
+      for (let i = 0; i < 5; i++) {
+        const dot = document.createElement("span");
+        dot.style.width = "10px";
+        dot.style.height = "10px";
+        dot.style.borderRadius = "50%";
+        dot.style.backgroundColor = "white";
+        dot.style.animation = `dotBounce 1s infinite ease-in-out`;
+        dot.style.animationDelay = `${i * 0.15}s`;
+        container.appendChild(dot);
+      }
+      if (!document.getElementById("dot-bounce-style")) {
+        const style = document.createElement("style");
+        style.id = "dot-bounce-style";
+        style.textContent = `
+          @keyframes dotBounce {
+            0%, 80%, 100% {
+              transform: scale(0.8);
+              opacity: 0.3;
+            }
+            40% {
+              transform: scale(1.2);
+              opacity: 1;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
     }
     displayLoading();
   </script>
@@ -274,10 +365,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (separatorIndex > 0) {
       String meterId = payload.substring(0, separatorIndex);
       String connectionAuth = payload.substring(separatorIndex + 1);
-      Serial.println("Hey Guys I'm here!");
+      String wifiName = payload.substring(payload.indexOf('/', separatorIndex + 1) + 1, payload.lastIndexOf('/'));
+      String wifiPassword = payload.substring(payload.lastIndexOf('/') + 1);
       Serial.println("Meter ID: " + meterId);
       Serial.println("Connection Auth: " + connectionAuth);
-      saveMeterCredentials(meterId, connectionAuth);
+      Serial.println("Wi-Fi Name: " + wifiName);
+      Serial.println("Wi-Fi Password: " + wifiPassword);
+      saveMeterCredentials(meterId, connectionAuth, wifiName, wifiPassword);
 
       // Save to preferences or use as needed
     } else {

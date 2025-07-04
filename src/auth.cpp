@@ -3,10 +3,12 @@
 #include "implt.h"
 Preferences preferences;
 #define ACTIVE_PIN 21
-void saveMeterCredentials(String meterId, String connectionAuth) {
+void saveMeterCredentials(String meterId, String connectionAuth, String wifiName, String wifiPassword) {
   preferences.begin("meter", false);
   preferences.putString("id", meterId);
   preferences.putString("auth", connectionAuth);
+  preferences.putString("wifi_name", wifiName);
+  preferences.putString("wifi_password", wifiPassword);
   preferences.end();
   displayTextCenter("Meter Data Saved", "Successfully");
   delay(1000);
@@ -35,8 +37,27 @@ MeterConfig loadMeterData() {
 void EnterCredentials(){
     Serial.begin(9600);
     delay(1000);
-    Serial.print("Enter Meter ID: ");
+    Serial.print("Enter Wi-Fi Name: ");
     delay(2000);
+    String wifiNameSerial = "";
+    while (Serial.available() == 0) {
+        delay(1000);
+    }
+    wifiNameSerial = Serial.readStringUntil('\n');
+    wifiNameSerial.trim();
+    Serial.println(wifiNameSerial);
+
+    Serial.print("Enter Wi-Fi Password: ");
+    delay(2000);
+    String wifiPasswordSerial = "";
+    while (Serial.available() == 0) {
+        delay(1000);
+    }
+    wifiPasswordSerial = Serial.readStringUntil('\n');
+    wifiPasswordSerial.trim();
+    Serial.println(wifiPasswordSerial);
+
+    Serial.print("Enter Meter ID: ");
     String meterIdSerial = "";
     String connectionAuthSerial = "";
     while (Serial.available() == 0) {
@@ -57,7 +78,7 @@ void EnterCredentials(){
         Serial.println("Invalid input. Please try again.");
         EnterCredentials();
     }else{
-        saveMeterCredentials(meterIdSerial, connectionAuthSerial);
+        saveMeterCredentials(meterIdSerial, connectionAuthSerial, wifiNameSerial, wifiPasswordSerial);
         Serial.println("Meter Credentials Configured Successfully.");
     }
 }
