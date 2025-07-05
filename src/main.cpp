@@ -152,6 +152,7 @@ void loop() {
         }
     }else{ 
         digitalWrite(ERROR_PIN, 1);
+        ResetButton();
         WiFi.reconnect();
         displayTextCenter("Connecting To Sems", "Server...");
         delay(5000);

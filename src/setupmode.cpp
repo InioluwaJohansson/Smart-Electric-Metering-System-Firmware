@@ -31,7 +31,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       justify-content: center;
       color: #ffffff;
       overflow: auto;
-      padding: 7rem;
+      padding: 2rem;
     }
     .login-container {
       background-color: #111827;
