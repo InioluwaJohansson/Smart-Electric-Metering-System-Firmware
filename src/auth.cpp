@@ -3,12 +3,10 @@
 #include "implt.h"
 Preferences preferences;
 #define ACTIVE_PIN 21
-void saveMeterCredentials(String meterId, String connectionAuth, String wifiName, String wifiPassword) {
+void saveMeterCredentials(String meterId, String connectionAuth){
   preferences.begin("meter", false);
-  preferences.putString("id", meterId);
-  preferences.putString("auth", connectionAuth);
-  preferences.putString("wifiName", wifiName);
-  preferences.putString("wifiPassword", wifiPassword);
+  preferences.putString("id", meterId ? "METER37CBBA48" : meterId);
+  preferences.putString("auth", connectionAuth ? "98ffc13e-f34e-4176" : connectionAuth);
   preferences.end();
   displayTextCenter("Meter Data Saved", "Successfully");
   delay(1000);
@@ -30,8 +28,6 @@ MeterConfig loadMeterData() {
     preferences.begin("meter", true);
     doc.meterId = preferences.getString("id");
     doc.connectionAuth = preferences.getString("auth");
-    doc.wifiName = preferences.getString("wifiName");
-    doc.wifiPassword = preferences.getString("wifiPassword");
     preferences.end();
     return doc;
 }
@@ -39,26 +35,6 @@ MeterConfig loadMeterData() {
 void EnterCredentials(){
     Serial.begin(9600);
     delay(1000);
-    Serial.print("Enter Wi-Fi Name: ");
-    delay(2000);
-    String wifiNameSerial = "";
-    while (Serial.available() == 0) {
-        delay(1000);
-    }
-    wifiNameSerial = Serial.readStringUntil('\n');
-    wifiNameSerial.trim();
-    Serial.println(wifiNameSerial);
-
-    Serial.print("Enter Wi-Fi Password: ");
-    delay(2000);
-    String wifiPasswordSerial = "";
-    while (Serial.available() == 0) {
-        delay(1000);
-    }
-    wifiPasswordSerial = Serial.readStringUntil('\n');
-    wifiPasswordSerial.trim();
-    Serial.println(wifiPasswordSerial);
-
     Serial.print("Enter Meter ID: ");
     String meterIdSerial = "";
     String connectionAuthSerial = "";
@@ -76,11 +52,11 @@ void EnterCredentials(){
     connectionAuthSerial = Serial.readStringUntil('\n');
     connectionAuthSerial.trim();
     Serial.println(connectionAuthSerial);
-    if(meterIdSerial == "" || connectionAuthSerial == "" || wifiNameSerial == "" || wifiPasswordSerial == "") {
+    if(meterIdSerial == "" || connectionAuthSerial == "") {
         Serial.println("Invalid input. Please try again.");
         EnterCredentials();
     }else{
-        saveMeterCredentials(meterIdSerial, connectionAuthSerial, wifiNameSerial, wifiPasswordSerial);
+        saveMeterCredentials(meterIdSerial, connectionAuthSerial);
         Serial.println("Meter Credentials Configured Successfully.");
     }
 }

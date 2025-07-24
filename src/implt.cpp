@@ -40,20 +40,22 @@ void MeterInfoSetup(){
     Serial.begin(9600);
 }
 void displayData(String meterId, float voltage, float current, float power, float load, double units, String operatingStatus, String messages) {
+    lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print(meterId);
     lcd.setCursor(0, 1);
-    lcd.print(String(units) + "kWh" + " V:" + String(voltage) + "V");
-    lcd.setCursor(0, 2);
+    lcd.print(String(units) + "kWh" + " St:" + String(operatingStatus) + "");
+    delay(3000);
+    lcd.setCursor(0, 0);
     lcd.print("P:" + String(power) + "kW" + " L:" + String(load) + "kW");
-    lcd.setCursor(0, 3);
+    lcd.setCursor(0, 1);
     lcd.print("LS:" + String(operatingStatus) + " Msg: " + String(messages));
 }
 void displayTextCenter(String message, String message2) {
     lcd.clear();
-    lcd.setCursor(0, 1);
+    lcd.setCursor(0, 0);
     lcd.print(String(message));
-    lcd.setCursor(0, 2);
+    lcd.setCursor(0, 1);
     lcd.print(String(message2));
 }
 void displayWifiText(String message, String message2, String IpAddress) {
@@ -62,9 +64,10 @@ void displayWifiText(String message, String message2, String IpAddress) {
     lcd.print(String(message));
     lcd.setCursor(0, 1);
     lcd.print("Password:" + String(message2));
-    lcd.setCursor(0, 2);
+    delay(3000);
+    lcd.setCursor(0, 0);
     lcd.print("IP:" + String(IpAddress));
-    lcd.setCursor(0, 3);
+    lcd.setCursor(0, 1);
     lcd.print("Enter IP in Browser");
 }
 void displayClear(){

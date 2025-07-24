@@ -43,7 +43,6 @@ void sendDataToAPI(String meterId, String connectionAuth, double powerValue, dou
         http.end();
         Serial.println("WiFi not connected for POST request");
     }
-    
   }
 MeterData fetchDataFromAPI(String meterId, String connectionAuth){
   String EstablishConnectionByESP32 = "https://8hrck4nk-7211.uks1.devtunnels.ms/SEMS/Data/EstablishConnectionByESP32?MeterId=" + meterId + "&auth=" + connectionAuth;

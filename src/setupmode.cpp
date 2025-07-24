@@ -6,7 +6,7 @@
 #include "esp_task_wdt.h"
 #include "auth.h"
 #include "implt.h"
-const char* ssidBootMode = "SEMS Meter Setup"; const char* passwordBootMode = "SEMSMeter";
+const char* ssidBootMode = "SEMS Meter"; const char* passwordBootMode = "SEMSMeter";
 IPAddress apIP(72, 72, 72, 72); AsyncWebServer server(80); AsyncWebSocket ws("/ws");
 int socket_data = 0;
 const char index_html[] PROGMEM = R"rawliteral(
@@ -146,15 +146,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h3>Setup meter for the first time!</h3>
     <p class="subtext">Enter the credentials below to setup your meter</p>
     <form>
-      <h3>Network Credentials</h3>
-      <div class="input-wrapper">
-        <label for="wifiName">Wi-Fi Name</label>
-        <input type="text" id="wifiName" placeholder="Wi-Fi Name" oninput="checkWifiNameInput()" minlength="1">
-      </div>
-      <div class="input-wrapper">
-        <label for="wifiPassword">Wi-Fi Password</label>
-        <input type="password" id="wifiPassword" placeholder="Wi-Fi Password" oninput="checkWifiPasswordInput()" minlength="1">
-      </div>
       <h3>Meter Credentials</h3>
       <div class="input-wrapper">
         <label for="meterId">Meter ID</label>
@@ -216,9 +207,9 @@ const char index_html[] PROGMEM = R"rawliteral(
       var connectionAuth = document.querySelector('#connectionAuth');
       var wifiName = document.querySelector('#wifiName');
       var wifiPassword = document.querySelector('#wifiPassword');
-      if (checkMeterInput() && checkConnectionInput() && checkWifiNameInput() && checkWifiPasswordInput()) {
+      if (checkMeterInput() && checkConnectionInput()) {
         if (connection != null) {
-          connection.send(meterId.value+"/"+connectionAuth.value+"/"+wifiName.value+"/"+wifiPassword.value);
+          connection.send(meterId.value+"/"+connectionAuth.value);
           return true
         } else {
           Connect();
@@ -364,15 +355,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     if (separatorIndex > 0) {
       String meterId = payload.substring(0, separatorIndex);
       String connectionAuth = payload.substring(separatorIndex + 1);
-      String wifiName = payload.substring(payload.indexOf('/', separatorIndex + 1) + 1, payload.lastIndexOf('/'));
-      String wifiPassword = payload.substring(payload.lastIndexOf('/') + 1);
+      payload.substring(payload.lastIndexOf('/') + 1);
       Serial.println("Meter ID: " + meterId);
       Serial.println("Connection Auth: " + connectionAuth);
-      Serial.println("Wi-Fi Name: " + wifiName);
-      Serial.println("Wi-Fi Password: " + wifiPassword);
-      saveMeterCredentials(meterId, connectionAuth, wifiName, wifiPassword);
-
-      // Save to preferences or use as needed
+      saveMeterCredentials(meterId, connectionAuth);
     } else {
       Serial.println("Invalid format. Expected 'meterId/connectionAuth'");
     }
