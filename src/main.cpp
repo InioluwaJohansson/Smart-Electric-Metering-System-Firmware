@@ -25,15 +25,15 @@
 
 // Voltage Sensor (ZMPT101B)
 const int voltagePin = 34;
-const float voltageCalibration = 0.0065;  // Adjust based on your setup
-const int voltageOffset = 3111;           // Measured with no AC voltage
+const float voltageCalibration = 0.006;  // Adjust based on your setup
+int voltageOffset = 2692;           // Measured with no AC voltage
 const float voltageNoiseThreshold = 1.0;  // Filter small/no voltage
 
 // Current Sensor (ACS712)
 const int currentPin = 35;
-const float currentSensitivity = 0.5;   // For ACS712-5A
-const int currentOffset = 2785;           // Measured at no load
-const float currentNoiseThreshold = 0.01;// Filter small/no current
+float currentSensitivity = .2420;   // For ACS712-5A
+int currentOffset = 2634;           // Measured at no load
+float currentNoiseThreshold = 0.25; // Filter small/no current
 
 const int samples = 1000;
 const int averagingInterval = 10; 
@@ -117,7 +117,41 @@ float readCurrentRMS() {
 }
 
 const float currentThreshold = 0.1;     // Ignore currents < 100mA
+void updateOffsetsIfNoLoad(float voltage, float current) {
+  if (voltage < 10.0 && current < 0.1) { // Assume no load if <10V and <0.1A
+    int vSum = 0;
+    int cSum = 0;
+    int samples = 500;
+    for (int i = 0; i < samples; i++) {
+      vSum += analogRead(voltagePin);
+      cSum += analogRead(currentPin);
+      delay(1);
+    }
+    voltageOffset = vSum / samples;
+    currentOffset = cSum / samples;
 
+    Serial.println("[AUTO-CALIBRATION] Offsets updated:");
+    Serial.println("Voltage Offset: " + String(voltageOffset));
+    Serial.println("Current Offset: " + String(currentOffset));
+  }
+}
+void RunCurrentCalibration(){
+    float rawCurrent = 0.0;
+  const int samples = 5;
+  for (int i = 0; i < samples; i++) {
+    rawCurrent += readCurrentRMS(); // uses existing RMS + offset method
+    delay(1000);
+  }
+  rawCurrent /= samples;
+
+  // Update calibration factor
+  const float knownCurrent = 3.2; // 3.2A from iron
+  currentSensitivity *= (knownCurrent / rawCurrent);
+
+  Serial.println("[CALIBRATION DONE]");
+  Serial.println("Measured Current (before): " + String(rawCurrent, 3) + " A");
+  Serial.println("Updated Calibration Factor: " + String(currentSensitivity, 4));
+}
 void recordPower() {
     sumVoltage = 0.0;
     sumCurrent = 0.0;
@@ -177,6 +211,12 @@ void IRAM_ATTR onTamperInterrupt() {
 void setup() {
     analogReadResolution(12); // ESP32 ADC: 0-4095
     delay(1000);
+    float voltage = readVoltageRMS();
+    float current = readCurrentRMS();
+    Serial.print("Voltage: "); Serial.print(voltage); Serial.print(" V\t");
+    Serial.print("Current: "); Serial.print(current); Serial.print(" A\t");
+    //updateOffsetsIfNoLoad(voltage, current);
+    //RunCurrentCalibration();
     Serial.println("Starting power monitoring...");
     MeterInfoSetup();
     attachInterrupt(digitalPinToInterrupt(TAMPER_IN), onTamperInterrupt, CHANGE);
